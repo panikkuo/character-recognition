@@ -1,15 +1,18 @@
-from typing import Union
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
-
+from fastapi import FastAPI, File, UploadFile
+from PIL import Image
+import numpy as np
+import io
+import os
 
 app = FastAPI()
 
-@app.get("/")
-async def read_root():
-    return {"sosi chto?": "hui"}
-    # return """<style>.someclass{font-size: 128px; color: red; text-align: center;}.someclass:hover { transform: translate(100px, 100px); transition-duration: 2000ms; opacity: 0}</style><h1 class=\"someclass\">Наведи на меня</h1>"""
+path = 'test_images'
 
-@app.get("/items/{item_id}")
-async def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
+@app.post("/upload-image/")
+async def upload_image(file: UploadFile = File(...)):
+    image_bytes = await file.read()
+    image = Image.open(io.BytesIO(image_bytes))
+    image_resized = image.resize((28, 28))
+    image_matrix = np.array(image_resized)
+    save_path = os.path.join(path, f"last_image")
+    image_resized.save(save_path)
