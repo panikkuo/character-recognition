@@ -5,13 +5,15 @@ let isDrawing = false;
 let lastX = 0;
 let lastY = 0;
 
-canvas.addEventListener('mousedown', (event) => {
-    isDrawing = true;
+const offsetX = canvas.getBoundingClientRect().left + window.scrollX;
+const offsetY = canvas.getBoundingClientRect().top + window.scrollY;
 
-    const rect = canvas.getBoundingClientRect();
-    lastX = event.clientX - rect.left;
-    lastY = event.clientY - rect.top;
+canvas.addEventListener('mousedown', function (e) {
+    isDrawing = true;
+    lastX = e.clientX - offsetX;
+    lastY = e.clientY - offsetY;
 });
+
 
 canvas.addEventListener('mouseup', () => {
     isDrawing = false;
@@ -21,18 +23,48 @@ canvas.addEventListener('mouseup', () => {
 canvas.addEventListener('mousemove', (event) => {
     if (!isDrawing) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    const x = event.clientX - offsetX;
+    const y = event.clientY - offsetY;
 
     ctx.beginPath();
     ctx.moveTo(lastX, lastY);
     ctx.lineTo(x, y);
     ctx.strokeStyle = 'black';
-    ctx.lineWidth = 10;
+    ctx.lineWidth = 10; 
     ctx.lineCap = 'round';
     ctx.stroke();
-    
+
     lastX = x;
     lastY = y;
+});
+
+document.getElementById('sendButton').addEventListener('click', function () {
+    let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    let matrix = [];
+    const n = canvas.height;
+    const m = canvas.width;
+
+    for (let i = 0; i < n; i++) {
+        let row = [];
+        for (let j = 0; j < m; j++) {
+
+            const color = imageData[(i * m + j) * 4 + 4];
+            row.push(color);
+        }
+        matrix.push(row);
+    }
+    fetch('api/v1/upload-image', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ matrix })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Успех:', data);
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+    });
 });

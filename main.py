@@ -1,18 +1,43 @@
-from fastapi import FastAPI, File, UploadFile
-from PIL import Image
-import numpy as np
-import io
-import os
+from fastapi import FastAPI
+# from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.cors import CORSMiddleware
+from typing import List
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
+# Создаем объект приложения FastAPI
 app = FastAPI()
 
-path = 'test_images'
+# Настройка CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.post("/upload-image/")
-async def upload_image(file: UploadFile = File(...)):
-    image_bytes = await file.read()
-    image = Image.open(io.BytesIO(image_bytes))
-    image_resized = image.resize((28, 28))
-    image_matrix = np.array(image_resized)
-    save_path = os.path.join(path, f"last_image")
-    image_resized.save(save_path)
+
+class MatrixRequest(BaseModel):
+    matrix: List[List[int]]
+
+
+# @app.options("/upload-image")
+# async def options_handler():
+#     return JSONResponse(
+#         content={"success": "200"},
+#         headers={
+#             "Access-Control-Allow-Origin": "*",
+#             "Access-Control-Allow-Methods": "*",
+#             "Access-Control-Allow-Headers": "*",
+#         },
+#     )
+
+
+@app.post("/upload-image")
+async def upload_image(request: MatrixRequest):
+    matrix = request.matrix
+    print("Received matrix:", matrix)
+    return {"message": "Matrix received successfully."}
+
+#uvicorn main:app  --reload --host 127.0.0.1 --port 8080

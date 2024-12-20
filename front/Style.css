@@ -1,13 +1,50 @@
 body {
     display: flex;
-    justify-content: center;
-    align-items: center;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
     height: 100vh;
     margin: 0;
     background-color: #f0f0f0;
 }
 
+header {
+    width: 100%;
+    background-color: #4caf50;
+    color: white;
+    padding: 20px 0;
+    font-size: 24px;
+    font-weight: bold;
+    padding-left: 20px;
+}
+
 canvas {
+    margin-top: 30px;
     border: 1px solid #000;
     cursor: crosshair;
+    margin-bottom: 20px;
+    margin-left: 20px;
+}
+
+.send-btn {
+    position: absolute;
+    top: 400px; 
+    left: 20px;
+    background-color: #4caf50;
+    color: white;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: transform 0.2s ease, background-color 0.3s ease; /* Анимация для кнопки */
+}
+
+.send-btn:hover {
+    background-color: #45a049; /* Эффект при наведении */
+}
+
+.send-btn:active {
+    transform: scale(0.95); /* Анимация сжимающейся кнопки при нажатии */
+    background-color: #3e8e41;  /* Изменение цвета при нажатии */
 }
