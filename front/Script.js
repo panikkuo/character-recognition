@@ -1,9 +1,9 @@
 const canvas = document.getElementById('drawingCanvas');
 const ctx = canvas.getContext('2d');
 
-let isDrawing = false;
-let lastX = 0;
-let lastY = 0;
+let isDrawing = false
+let lastX = 0
+let lastY = 0
 
 const offsetX = canvas.getBoundingClientRect().left + window.scrollX;
 const offsetY = canvas.getBoundingClientRect().top + window.scrollY;
@@ -30,7 +30,7 @@ canvas.addEventListener('mousemove', (event) => {
     ctx.moveTo(lastX, lastY);
     ctx.lineTo(x, y);
     ctx.strokeStyle = 'black';
-    ctx.lineWidth = 10; 
+    ctx.lineWidth = 22; 
     ctx.lineCap = 'round';
     ctx.stroke();
 
@@ -38,33 +38,38 @@ canvas.addEventListener('mousemove', (event) => {
     lastY = y;
 });
 
+function send_image(payload) {
+    const xhr = new XMLHttpRequest();
+    
+    xhr.open("POST", "http://127.0.0.1:8080/upload-image", true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            console.log(xhr.responseText);
+        }
+    };
+
+    xhr.onerror = function () {
+        console.log("ERROR VASYA");
+    }
+
+    xhr.send(payload);
+}
+
 document.getElementById('sendButton').addEventListener('click', function () {
     let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
     let matrix = [];
     const n = canvas.height;
     const m = canvas.width;
-
     for (let i = 0; i < n; i++) {
         let row = [];
         for (let j = 0; j < m; j++) {
-
-            const color = imageData[(i * m + j) * 4 + 4];
+            const color = imageData[(i * m + j) * 4 + 3];
             row.push(color);
         }
         matrix.push(row);
     }
-    fetch('api/v1/upload-image', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ matrix })
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Успех:', data);
-    })
-    .catch(error => {
-        console.error('Ошибка:', error);
-    });
+
+    send_image(JSON.stringify({ matrix }));
 });

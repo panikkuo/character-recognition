@@ -1,14 +1,25 @@
 from fastapi import FastAPI
-# from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.cors import CORSMiddleware
 from typing import List
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+import numpy as np
+import matplotlib.pyplot as plt
+import torch
+import nbimporter
+from model_v1 import Net
+import torch.nn.functional as F
 
-# Создаем объект приложения FastAPI
+
+MODEL_PATH = 'NET/net'
+
+net = Net()
+net.load_state_dict(torch.load(MODEL_PATH, weights_only=True))
+net.eval()
+
 app = FastAPI()
 
-# Настройка CORS
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -22,22 +33,34 @@ class MatrixRequest(BaseModel):
     matrix: List[List[int]]
 
 
-# @app.options("/upload-image")
-# async def options_handler():
-#     return JSONResponse(
-#         content={"success": "200"},
-#         headers={
-#             "Access-Control-Allow-Origin": "*",
-#             "Access-Control-Allow-Methods": "*",
-#             "Access-Control-Allow-Headers": "*",
-#         },
-#     )
+def prepare_number(number):
+    number = np.array(number, dtype='float32') / 255
+    number = number.reshape(1, 1, 28, 28)
+    return number
 
 
 @app.post("/upload-image")
 async def upload_image(request: MatrixRequest):
-    matrix = request.matrix
-    print("Received matrix:", matrix)
-    return {"message": "Matrix received successfully."}
+    matrix = np.array(request.matrix)
+    matrix_n, matrix_m = matrix.shape
+    number_n, number_m = 28, 28
+    number = np.zeros((number_n, number_m))
+    for i in range(0, matrix_n, 10):
+        for j in range(0, matrix_m, 10):
+            number[i // 10, j // 10] = np.sum(matrix[i : i + 10, j : j + 10]) / 100
+
+    number = prepare_number(number)
+    number_tensor = torch.tensor(number, dtype=torch.float32)
+
+    with torch.no_grad():
+        output = net(number_tensor)
+
+    # Получаем предсказание
+    predicted_class = torch.argmax(output, dim=1).item()
+    probabilities = F.softmax(output, dim=1).numpy()
+    print(probabilities)
+    return {"message": "Matrix received successfully.", "predicted_class": predicted_class}
+
+
 
 #uvicorn main:app  --reload --host 127.0.0.1 --port 8080
