@@ -47,7 +47,9 @@ async def upload_image(request: MatrixRequest):
     number = np.zeros((number_n, number_m))
     for i in range(0, matrix_n, 10):
         for j in range(0, matrix_m, 10):
-            number[i // 10, j // 10] = np.sum(matrix[i : i + 10, j : j + 10]) / 100
+            number[i // 10, j // 10] = np.sum(matrix[i : i + 10, j : j + 10]) / 30
+            if number[i // 10, j // 10] > 255:
+                number[i // 10, j // 10] = 255
 
     number = prepare_number(number)
     number_tensor = torch.tensor(number, dtype=torch.float32)
