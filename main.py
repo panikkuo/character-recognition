@@ -58,8 +58,12 @@ async def upload_image(request: MatrixRequest):
     # Получаем предсказание
     predicted_class = torch.argmax(output, dim=1).item()
     probabilities = F.softmax(output, dim=1).numpy()
-    print(probabilities)
-    return {"message": "Matrix received successfully.", "predicted_class": predicted_class}
+    pr_srt = [f"{prob:.5f}" for prob in probabilities[0]]
+    
+    return {
+        "predicted_class": predicted_class,
+        "probabilities" : pr_srt
+    }
 
 
 

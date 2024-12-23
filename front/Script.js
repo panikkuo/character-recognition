@@ -46,12 +46,29 @@ function send_image(payload) {
 
     xhr.onreadystatechange = function () {
         if (xhr.readyState === 4) {
-            console.log(xhr.responseText);
+            try {
+                const response = JSON.parse(xhr.responseText);
+                const predClass = document.getElementById('predicted-class-value');
+                predClass.textContent = response.predicted_class;
+
+                if (Array.isArray(response.probabilities) && response.probabilities.length === 10) {
+                    for (let i = 0; i < response.probabilities.length; i++) {
+                        const probElement = document.getElementById(`prob${i}`);
+                        if (probElement) {
+                            probElement.textContent = response.probabilities[i];
+                        }
+                    }
+                } else {
+                    console.error("Ответ сервера не содержит массива 'probabilities' из 10 элементов.");
+                }
+            } catch (error) {
+                console.error("Ошибка при парсинге JSON:", error);
+            }
         }
     };
 
     xhr.onerror = function () {
-        console.log("ERROR VASYA");
+        console.log("Catched error!");
     }
 
     xhr.send(payload);
@@ -72,4 +89,18 @@ document.getElementById('sendButton').addEventListener('click', function () {
     }
 
     send_image(JSON.stringify({ matrix }));
+});
+
+document.getElementById('clearButton').addEventListener('click', function () {
+    let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const n = canvas.height;
+    const m = canvas.width;
+
+    for (let i = 0; i < n; i++) {
+        for (let j = 0; j < m; j++) {
+            imageData.data[(i * m + j) * 4 + 3] = 0;
+        }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
 });
